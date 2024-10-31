@@ -2,6 +2,7 @@ from typing import Final
 import os
 from dotenv import load_dotenv
 from discord import Intents, Client, ScheduledEvent, utils, Member, User, EventStatus
+import logging
 
 # Loading in the bot's discord token
 load_dotenv()
@@ -14,12 +15,13 @@ intents.guild_scheduled_events = True
 client: Client = Client(intents=intents)
 
 role_prefix = "[EVENT] "
+logger = logging.getLogger("discord")
 
 
 # Detects when an event is created
 @client.event
 async def on_scheduled_event_create(event: ScheduledEvent) -> None:
-    print(f"event '{event.name}' created")
+    logger.info(f"event '{event.name}' created")
 
     guild = event.guild
     role_name = role_prefix + event.name
@@ -27,21 +29,21 @@ async def on_scheduled_event_create(event: ScheduledEvent) -> None:
 
     if role is None:
         role = await guild.create_role(name=role_name, mentionable=True)
-        print(f"Role '{role_name}' created for event '{event.name}'.")
+        logger.info(f"Role '{role_name}' created for event '{event.name}'.")
 
         creator: User = event.creator
 
         if creator:
             member: Member = guild.get_member(creator.id) or await guild.fetch_member(creator.id)
             await member.add_roles(role)
-            print(
+            logger.info(
                 f"Assigned role '{role.name}' to {member.display_name} for event '{event.name}'.")
 
 
 # Detects when an event is deleted
 @client.event
 async def on_scheduled_event_delete(event: ScheduledEvent) -> None:
-    print(f"event '{event.name}' deleted")
+    logger.info(f"event '{event.name}' deleted")
 
     await purge_event_role(event)
 
@@ -49,23 +51,24 @@ async def on_scheduled_event_delete(event: ScheduledEvent) -> None:
 async def purge_event_role(event: ScheduledEvent):
     guild = event.guild
     role_name = role_prefix + event.name
-    print(f"Purging event role '{role_name}'")
+    logger.info(f"Purging event role '{role_name}'")
     role = utils.get(guild.roles, name=role_name)
 
     if role:
         for member in guild.members:
             if role in member.roles:
                 await member.remove_roles(role)
-                print(f"Role '{role_name}' remove from {member.name}")
+                logger.info(f"Role '{role_name}' remove from {member.name}")
 
         await role.delete()
-        print(f"Role '{role_name}' deleted for deleted event '{event.name}'.")
+        logger.info(
+            f"Role '{role_name}' deleted for deleted event '{event.name}'.")
 
 
 # Detect when user marks as interested
 @client.event
 async def on_scheduled_event_user_add(event: ScheduledEvent, user: User) -> None:
-    print(f"{user.name} interested in '{event.name}' event")
+    logger.info(f"{user.name} interested in '{event.name}' event")
 
     guild = event.guild
     member = guild.get_member(user.id) or await guild.fetch_member(user.id)
@@ -74,14 +77,14 @@ async def on_scheduled_event_user_add(event: ScheduledEvent, user: User) -> None
 
     if role:
         await member.add_roles(role)
-        print(
+        logger.info(
             f"Assigned role '{role.name}' to {user.display_name} for event '{event.name}'.")
 
 
 # Detect when user unchecks being interested
 @client.event
 async def on_scheduled_event_user_remove(event: ScheduledEvent, user: User) -> None:
-    print(f"{user.name} no longer interested in '{event.name}' event")
+    logger.info(f"{user.name} no longer interested in '{event.name}' event")
 
     guild = event.guild
     member = guild.get_member(user.id) or await guild.fetch_member(user.id)
@@ -90,14 +93,14 @@ async def on_scheduled_event_user_remove(event: ScheduledEvent, user: User) -> N
 
     if role:
         await member.remove_roles(role)
-        print(
+        logger.info(
             f"Removed role '{role.name}' from {user.display_name} for event '{event.name}'.")
 
 
 # Detect when event is updated
 @client.event
 async def on_scheduled_event_update(before: ScheduledEvent, after: ScheduledEvent) -> None:
-    print(f"Event {before.name} updated")
+    logger.info(f"Event {before.name} updated")
 
     # Event name was changed
     if before.name != after.name:
@@ -105,7 +108,7 @@ async def on_scheduled_event_update(before: ScheduledEvent, after: ScheduledEven
         new_role_name = role_prefix + after.name
         role = utils.get(after.guild.roles, name=old_role_name)
         await role.edit(name=new_role_name)
-        print(
+        logger.info(
             f"Changed event role name from '{role_prefix}{old_role_name}' to '{role_prefix}{new_role_name}'")
 
     # Event ended
@@ -116,7 +119,7 @@ async def on_scheduled_event_update(before: ScheduledEvent, after: ScheduledEven
 # Bot startup
 @client.event
 async def on_ready() -> None:
-    print(f'{client.user} is now running!')
+    logger.info(f'{client.user} is now running!')
 
 
 # Main entry point
