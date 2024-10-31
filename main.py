@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from discord import Intents, Client, Message, ScheduledEvent, utils, Member, User, EventStatus
 
-# Loading in the bot's disocrd token
+# Loading in the bot's discord token
 load_dotenv()
 TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
 
