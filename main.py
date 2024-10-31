@@ -1,7 +1,7 @@
-from typing import Final, List
+from typing import Final
 import os
 from dotenv import load_dotenv
-from discord import Intents, Client, Message, ScheduledEvent, utils, Member, User, EventStatus
+from discord import Intents, Client, ScheduledEvent, utils, Member, User, EventStatus
 
 # Loading in the bot's discord token
 load_dotenv()
@@ -13,6 +13,8 @@ intents.members = True
 intents.guild_scheduled_events = True
 client: Client = Client(intents=intents)
 
+role_prefix = "[EVENT] "
+
 
 # Detects when an event is created
 @client.event
@@ -20,7 +22,7 @@ async def on_scheduled_event_create(event: ScheduledEvent) -> None:
     print(f"event '{event.name}' created")
 
     guild = event.guild
-    role_name = "[EVENT] " + event.name
+    role_name = role_prefix + event.name
     role = utils.get(guild.roles, name=role_name)
 
     if role is None:
@@ -46,7 +48,7 @@ async def on_scheduled_event_delete(event: ScheduledEvent) -> None:
 
 async def purge_event_role(event: ScheduledEvent):
     guild = event.guild
-    role_name = "[EVENT] " + event.name
+    role_name = role_prefix + event.name
     print(f"Purging event role '{role_name}'")
     role = utils.get(guild.roles, name=role_name)
 
@@ -67,7 +69,7 @@ async def on_scheduled_event_user_add(event: ScheduledEvent, user: User) -> None
 
     guild = event.guild
     member = guild.get_member(user.id) or await guild.fetch_member(user.id)
-    role_name = "[EVENT] " + event.name
+    role_name = role_prefix + event.name
     role = utils.get(event.guild.roles, name=role_name)
 
     if role:
@@ -83,7 +85,7 @@ async def on_scheduled_event_user_remove(event: ScheduledEvent, user: User) -> N
 
     guild = event.guild
     member = guild.get_member(user.id) or await guild.fetch_member(user.id)
-    role_name = "[EVENT] " + event.name
+    role_name = role_prefix + event.name
     role = utils.get(event.guild.roles, name=role_name)
 
     if role:
@@ -99,12 +101,12 @@ async def on_scheduled_event_update(before: ScheduledEvent, after: ScheduledEven
 
     # Event name was changed
     if before.name != after.name:
-        old_role_name = "[EVENT] " + before.name
-        new_role_name = "[EVENT] " + after.name
+        old_role_name = role_prefix + before.name
+        new_role_name = role_prefix + after.name
         role = utils.get(after.guild.roles, name=old_role_name)
         await role.edit(name=new_role_name)
         print(
-            f"Changed event role name from '[EVENT] {old_role_name}' to '[EVENT] {new_role_name}'")
+            f"Changed event role name from '{role_prefix}{old_role_name}' to '{role_prefix}{new_role_name}'")
 
     # Event ended
     if after.status == EventStatus.completed:
