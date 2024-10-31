@@ -18,6 +18,7 @@ client: Client = Client(intents=intents)
 @client.event
 async def on_scheduled_event_create(event: ScheduledEvent) -> None:
     print(f"event '{event.name}' created")
+
     guild = event.guild
     role_name = "[EVENT] " + event.name
     role = utils.get(guild.roles, name=role_name)
@@ -39,6 +40,7 @@ async def on_scheduled_event_create(event: ScheduledEvent) -> None:
 @client.event
 async def on_scheduled_event_delete(event: ScheduledEvent) -> None:
     print(f"event '{event.name}' deleted")
+
     await purge_event_role(event)
 
 
@@ -62,6 +64,7 @@ async def purge_event_role(event: ScheduledEvent):
 @client.event
 async def on_scheduled_event_user_add(event: ScheduledEvent, user: User) -> None:
     print(f"{user.name} interested in '{event.name}' event")
+
     guild = event.guild
     member = guild.get_member(user.id) or await guild.fetch_member(user.id)
     role_name = "[EVENT] " + event.name
@@ -77,6 +80,7 @@ async def on_scheduled_event_user_add(event: ScheduledEvent, user: User) -> None
 @client.event
 async def on_scheduled_event_user_remove(event: ScheduledEvent, user: User) -> None:
     print(f"{user.name} no longer interested in '{event.name}' event")
+
     guild = event.guild
     member = guild.get_member(user.id) or await guild.fetch_member(user.id)
     role_name = "[EVENT] " + event.name
